@@ -1,5 +1,42 @@
 var kurbiApp = angular.module('kurbiPatient', ['ui.router', 'postDirectives']);
 
+// LOAD CONFIGURATION FILE (ALLOW FOR DEV OVERRIDE)
+angular.element(document).ready(
+  function() {
+    var initInjector = angular.injector(['ng']);
+    var $http = initInjector.get('$http');
+
+    $http.get('configDev.json')
+    .success(function(data, status) {
+        kurbiApp.constant('config', data);
+        angular.bootstrap(document, ['kurbiPatient']);
+    })
+    .error(function(data, status, headers, config){
+      $http.get('configTest.json')
+      .success(function(data, status){
+          kurbiApp.constant('config', data);
+          angular.bootstrap(document, ['kurbiPatient']);
+      })
+      .error(function(data, status, headers, config){
+        $http.get('config.json')
+        .success(function(data){
+            kurbiApp.constant('config', data);
+            angular.bootstrap(document, ['kurbiPatient']);
+        })
+        .error(function(data, status, headers, config){
+          var temp = {
+            apiUrl: 'http://api.gokurbi.com/v1/',
+            hdaApiUrl: 'http://hdaapi.gokurbi.com/v1/',
+            environment: 'prod'
+          }
+          kurbiApp.constant('config', temp);
+          angular.bootstrap(document, ['kurbiPatient']);
+        }); // end of 3rd .error
+      }); // end of 2nd .error
+    }); // end of 1st .error
+  }
+);
+
 kurbiApp.config(function($stateProvider, $urlRouterProvider) {
 	
 	$urlRouterProvider.otherwise('/home');
